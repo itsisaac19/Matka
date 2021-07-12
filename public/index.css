@@ -91,19 +91,6 @@ body {
     opacity: 0;
 }
 
-.container>button:hover {
-    background: rgb(244, 234, 218);
-    box-shadow: rgba(0, 0, 0, 0.008) 0px 10px 35px;
-}
-
-.container>button {
-    cursor: pointer;
-    padding: 10px 0px;
-    margin: 30px;
-    border: none;
-    color: rgb(60, 64, 59);
-    transition: background 0.2s ease-in-out;
-}
 
 .toolbar {
     width: 100%;
@@ -145,13 +132,37 @@ body {
 }
 
 .save {
+    cursor: pointer;
+
     position: absolute;
     left: 0px;
     bottom: 0px;
-    width: 46%;
-    border-radius: 10px 0px 0px 10px;
-    background: rgb(249, 239, 220);
+    width: calc(100% - 60px);
+
+    border: none;
+    border-radius: 10px;
+
+    color: #90743f;
+    background: rgb(239 201 129);
+    box-shadow: 0px 5px 25px #efc982;
+
+    padding: 10px 0px;
+    margin: 30px;
+
+    backface-visibility: hidden;
+    transform: translateZ(0);
+    -webkit-font-smoothing: subpixel-antialiased;
+
+    transition: background 0.2s ease-in-out, color 0.2s ease-in-out, box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out;
 }
+.save:hover {
+    color: #48340f;
+}
+.save:active {
+    transition: transform 0.1s ease-in-out;
+    transform: scale(0.98);
+}
+
 .share {
     position: absolute;
     right: 0px;
@@ -164,6 +175,7 @@ body {
 .save.zen, .share.zen, .toolbar.zen {
     color: #d2ccc3;
     background: rgba(249, 239, 220, 0.324);
+    box-shadow: none;
 }
 
 
@@ -259,4 +271,17 @@ body {
     font-size: 14px;
     font-weight: bold;
     font-family: 'Roboto',arial,sans-serif;
+}
+
+.messages {
+    opacity: 0;
+    position: absolute;
+    bottom: 170px;
+    left: 50%;
+    transform: translateX(-50%);
+
+    transition: opacity 0.2s ease-in-out;
+}
+.messages.show {
+    opacity: 1;
 }

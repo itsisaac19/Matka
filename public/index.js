@@ -66,17 +66,43 @@ class matkajournal {
         document.querySelector('#matka-title').innerHTML = '';
         document.querySelector('#matka-body').innerHTML = '';
     }
+    isClear() {
+        return document.querySelector('#matka-title').textContent.trim() == '' && document.querySelector('#matka-body').textContent.trim() == '';
+    }
     zen(state) {
         if (state == 'off') {
             this.zenState = 'off';
             document.querySelector('.toolbar').classList.remove('zen');
             document.querySelector('button.save').classList.remove('zen');
-            document.querySelector('button.share').classList.remove('zen');
             return;
         }
         document.querySelector('.toolbar').classList.add('zen');
         document.querySelector('button.save').classList.add('zen');
-        document.querySelector('button.share').classList.add('zen');
+    }
+}
+
+var newMessageIncoming = false;
+
+class DOMMessage {
+    constructor(message) {
+        this.message = message;
+    }
+    dispatch() {
+        let messageContainer = document.querySelector('.messages');
+        messageContainer.innerHTML = this.message;
+
+        console.log('dispatching message' + this.message);
+
+        messageContainer.classList.add('show');
+        setTimeout(() => {
+            if (newMessageIncoming == true) return newMessageIncoming = false;
+            messageContainer.classList.remove('show')
+        }, 3000)
+    }
+    update(entry) {
+        newMessageIncoming = true;
+        this.message = entry;
+        this.dispatch();
     }
 }
 
@@ -150,12 +176,24 @@ const saveMatka = () => {
     let matka = new matkajournal(id);
 
     if (!matka.id) return console.warn(`Matka id is missing`);
+    if (matka.isClear() == true) console.warn(`Matka is empty. Nothing to save`);
+
+    let msg = new DOMMessage('Saving Matka...');
+    msg.dispatch();
 
     database.ref(`/users/${googleId}/${matka.id}`).set({
         title: matka.title,
         body: matka.body
-    })
+    }, (error) => {
+        if (error) {
+            msg.update(`A problem occured saving "${matka.title}"`)
+        } else {
+            msg.update(`Saved "${matka.title}" successfully`)
+        }
+    });
 }
+
+var typingTimeout;
 
 
 function zenJournal (canvas) {
@@ -168,6 +206,7 @@ function unZenJournal (canvas) {
     if (canvas.zenState === 'off') return;
     canvas.zen('off');
     canvas.zenState = 'off';
+    clearTimeout(typingTimeout)
 }
 
 const assignListeners = () => {
@@ -187,19 +226,34 @@ const assignListeners = () => {
 
     const newButton = document.querySelector('.toolbar-item.new');
     newButton.addEventListener('click', () => {
-        setUid();
+        let msg = new DOMMessage('New Matka successfully created')
+        msg.dispatch();
 
         let matka = new matkajournal()
+        if (matka.isClear() == true) {
+            return console.warn('already a cleared / new journal')
+        }
+        setUid();
         matkaCanvas.clear();
     });
 
     // Typing listeners
+
     const titleinput = document.querySelector('#matka-title');
     titleinput.addEventListener('focus', () => {
         zenJournal(matkaCanvas);
     })
     titleinput.addEventListener('blur', () => {
         unZenJournal(matkaCanvas);
+    })
+
+    titleinput.addEventListener('keydown', (e) => {
+        if (e.key == 'Enter' && !e.shiftKey){
+            e.preventDefault();
+            e.stopPropagation();
+            document.querySelector('#matka-body').focus();
+            return false;
+        }
     })
 
     const bodyinput = document.querySelector('#matka-body');
@@ -210,9 +264,25 @@ const assignListeners = () => {
         unZenJournal(matkaCanvas);
     })
 
+    bodyinput.addEventListener('keydown', (e) => {
+        typingTimeout = setTimeout(() => {
+            if (matkaCanvas.zenState != 'zen') {
+                zenJournal(matkaCanvas);
+                console.log('matka zen')
+            }
+        }, 700)
+    })
 
-    /*document.querySelector('.container').addEventListener('mouseleave', () => {
+
+    document.querySelector('.save').addEventListener('mouseenter', () => {
         unZenJournal(matkaCanvas);
-    })*/
+    })
+    document.addEventListener('mousemove', (e) => {
+        if (e.target.classList.contains('journalInput') || e.target.classList.contains('journalTitle')) return;
+        unZenJournal(matkaCanvas);
+    })
+    document.querySelector('.toolbar').addEventListener('mouseenter', () => {
+        unZenJournal(matkaCanvas);
+    })
 }
 assignListeners();
