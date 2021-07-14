@@ -10,6 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="index.css">
+    <link rel="icon" href="journal.svg" sizes="any" type="image/svg+xml">
 </head>
 
 <body>
@@ -17,13 +18,28 @@
         <div class="container" data-id="">
             <div class="toolbar space-mono">
                 <div class="toolbar-item new">New Matka</div>
-                <div class="toolbar-item view">View My Matkas</div>
+                <div class="toolbar-item view"><span>View My Matkas</span> <span class="arrow"></span></div>
                 <div class="toolbar-item delete">Delete this Matka</div>
                 <div class="toolbar-item list hidden"></div>
             </div>
-            <div id="matka-title" class="journalTitle space-mono" placeholder="title..." contenteditable="true"></div>
-            <div id="matka-body" class="journalInput space-mono" placeholder="description..." contenteditable="true"></div>
-            <button class="save space-mono">save</button>
+            <div class="text-controls space-mono">
+                <!-- <div class="text-controls-item">
+                    <input type="text" class="text-controls-search" placeholder="Search Matka" />
+                </div> -->
+                <div class="text-controls-item manipulation">
+                    <button class="bold-text" action="bold">B</button>
+                    <button class="italic-text" action="italic">I</button>
+                    <button class="underline-text" action="underline">U</button>
+                    <button class="strike-text" action="strikeThrough">S</button>
+                    <button class="link-text wider" action="createLink">LINK</button>
+                    <!-- <button class="quote-text wider" action="quote">QUOTE</button> -->
+                    <!-- <button class="list-text wider" action="insertUnorderedList">LIST</button> -->
+                    <button class="filler">MORE CONTROLS COMING SOON</button>
+                </div>
+            </div>
+            <div id="matka-title" class="journalTitle space-mono" placeholder="Untitled" contenteditable="true"></div>
+            <div id="matka-body" class="journalInput space-mono" placeholder="Description..." contenteditable="true"></div>
+            <button class="save space-mono">all changes saved</button>
         </div>
         <button type="button" class="google-button">
             <span class="google-button__icon">
@@ -37,9 +53,19 @@
 </body>
 
 
-<script src="https://apis.google.com/js/platform.js?onload=init" async defer></script>
+<script src="https://apis.google.com/js/platform.js?onload=onGoogleScriptLoad" async defer></script>
 <script src="https://www.gstatic.com/firebasejs/8.7.1/firebase-app.js"></script>
+<!--
+<script>
+if(window.location.hostname == "localhost"){
+    self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+    console.log('self debug token')
+}
+</script>
+<script src="https://www.gstatic.com/firebasejs/8.7.1/firebase-app-check.js"></script>-->
+
 <script src="https://www.gstatic.com/firebasejs/8.7.1/firebase-database.js"></script>
+<script src="texteditor.js"></script>
 <script src="index.js"></script>
 <script>
     function signinChanged(signedIn) {
@@ -74,6 +100,16 @@
         }
     }
 
+    (() => {
+        var urlParams = new URLSearchParams(window.location.search);
+
+        if (urlParams.get('matka')) {
+            console.log('%cLoading matka from URL', 'color: green;');
+            document.querySelector('#matka-title').textContent = '...'
+            document.querySelector('#matka-body').textContent = '...'
+        }
+    })();
+
     function init() {
         gapi.load('auth2', function() {
             /* Ready. Make a call to gapi.auth2.init or some other API */
@@ -90,6 +126,21 @@
             }
         });
     }
+
+    var initHasBeenCalled = false;  // Flag to detect if init() has been called
+
+    function onGoogleScriptLoad () {
+        console.log('loaded')
+        init();
+        initHasBeenCalled = true;
+    }
+
+    setTimeout(() => {
+        if (initHasBeenCalled == false) {
+            console.log('manual load')
+            onGoogleScriptLoad();
+        }
+    }, 1000)
 
     function signOut() {
         var auth2 = gapi.auth2.getAuthInstance();
